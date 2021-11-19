@@ -39,6 +39,7 @@ The workflow is as follows:
 1. The geometry of the problem is created labeled and meshed ([GMSH](https://gmsh.info/) might be a good option). The mesh is exported as three separate xml files containing the mesh, the physical regions, and the facet regions. 
 
 <iframe width="420" height="315" src="https://youtu.be/3yZSBuIn48U" frameborder="0" allowfullscreen></iframe>
+[![Everything Is AWESOME](/img/geometry_creation_thumbnail.png))](https://youtu.be/3yZSBuIn48U"Everything Is AWESOME")
 
 2. A csv file is created containing information about the boundaries and information about the subvolumes. Then the electrostatic potential and electric field can be calculated using the convenience wrapper. 
 
