@@ -37,18 +37,14 @@ numerically via the finite element method (FEM). Here $\Phi(\boldsymbol r): \mat
 The workflow is as follows:  
 
 1. The geometry of the problem is created labeled and meshed ([GMSH](https://gmsh.info/) might be a good option). The mesh is exported as three separate xml files containing the mesh, the physical regions, and the facet regions. 
-
-<iframe width="420" height="315" src="https://youtu.be/3yZSBuIn48U" frameborder="0" allowfullscreen></iframe>
-[![Everything Is AWESOME](/img/geometry_creation_thumbnail.png))](https://youtu.be/3yZSBuIn48U"Everything Is AWESOME")
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/3yZSBuIn48U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 2. A csv file is created containing information about the boundaries and information about the subvolumes. Then the electrostatic potential and electric field can be calculated using the convenience wrapper. 
-
-<iframe width="420" height="315" src="https://youtu.be/p3nVQIBZ6jc" frameborder="0" allowfullscreen></iframe>
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/p3nVQIBZ6jc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 3.  Visualizing the electrostatic potential and electric field via your favorite software ([Paraview](https://www.paraview.org/) might be a 
 good option)
-
-<iframe width="420" height="315" src="https://youtu.be/E8hFyaaICg0" frameborder="0" allowfullscreen></iframe>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/E8hFyaaICg0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Analytical approximation for the parallel plate capacitor
 
