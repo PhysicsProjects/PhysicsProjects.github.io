@@ -1,0 +1,141 @@
+I"@1<p><strong>sources</strong>: thought and created by Felix Mende, most skills learned from the amazing blog https://comphysblog.wordpress.com/</p>
+
+<p>Notation: Vectors $\boldsymbol v$ are indicated by bold symbols.</p>
+
+<h1 id="theoretical-background-and-usecase-of-the-project">theoretical background and usecase of the project</h1>
+
+<h2 id="problem-of-interest">Problem of interest</h2>
+
+<p>In this project, we want to calculate the electrostatic potential and electric field for arbitrarily shaped electrodes in an inhomogeneous conductive medium. In this blog post, I will demonstrate the workflow using a very specific example of a parallel plate capacitor with a domain consisting of 2 different conducting media.</p>
+
+<p>A very specific use case could be to assist in the development of electrodes for extracellular stimulation of neural tissues. There, one may want to stimulate certain regions of neural tissue by exceeding the threshold potential there, while in other regions no stimulation is desired and the threshold potential should therefore not be exceeded. At the same time, damage to the tissue should be avoided, so that, for example, the current densities  $|\boldsymbol J|$  (with $ \boldsymbol J = \sigma(\boldsymbol r) \boldsymbol E $)  and thus the magnetude of the electric field $|\boldsymbol E|$ 
+should be kept as small as possible.  The combination of all these conditions amounts to an optimization problem for the geometry and design of the stimulation protocol <a href="https://arxiv.org/abs/1903.12459">Aristovich19</a>. For bioelectrical applications, it has been shown that the general time dependence of stimulation protocols can often be neglected and the problem considered static (see chapter 2.1 <a href="https://pubmed.ncbi.nlm.nih.gov/22036892/">Joucla20</a>). This quasi-static approach makes the problem much easier to solve and analyze.</p>
+
+<h2 id="what-the-project-provides">what the project provides</h2>
+
+<p>Specifically, the project provides a simple wrapper to solve the boundary value problem</p>
+
+\[\begin{cases} 
+      -\nabla \cdot \left(\sigma (\boldsymbol r) \nabla \Phi(\boldsymbol r) \right) = 0 &amp; \text{for $\boldsymbol r \in \Omega$} \\
+       \sigma(\boldsymbol r) \nabla  \Phi(\boldsymbol r)  \cdot \boldsymbol n(\boldsymbol r): = g_i (\Phi_i - \Phi(\boldsymbol r)) &amp; \text{for $\boldsymbol r \in \partial\Omega_i$}\\
+      \nabla  \Phi(\boldsymbol r)  \cdot \vec n = 0  &amp; \text{for $\boldsymbol r \in \partial\Omega_j$} \\
+      \Phi(\boldsymbol r) = \Phi_k &amp; \text{for $\boldsymbol r \in \partial\Omega_k$} 
+\end{cases}\]
+
+<p>numerically via the finite element method (FEM). Here $\Phi(\boldsymbol r): \mathbb{R}^3 \rightarrow \mathbb{R}$ is the electrostatic potential, $\sigma (\boldsymbol r): \mathbb{R}^3 \rightarrow \mathbb{R}$ is the space dependent scalar conductivity, $g_i \in \mathbb R$ and $\Phi_i \in \mathbb R$ are the surface conductances and potentials of electrode $i$, $\Omega \subset \mathbb{R}^3$ is the domain of the problem, $\partial\Omega_{\alpha}$ are the surfaces of the electrodes and boundaries of the problem (2 dimensional manifolds) and $\boldsymbol n(\boldsymbol r): \mathbb{R}^3 \rightarrow \mathbb{R}^3$ is the outer surface normal of the domain.</p>
+
+<p>Here it is not important that that the user understands the specifics of how to solve this boundary value problem.</p>
+
+<p>The workflow is as follows:</p>
+
+<ol>
+  <li>
+    <p>The geometry of the problem is created labeled and meshed (<a href="https://gmsh.info/">GMSH</a> might be a good option). The mesh is exported as three separate xml files containing the mesh, the physical regions, and the facet regions. A fourth csv file is created containing information about the boundaries (type of boundary condition and values) and information about the scalar conductivity of the different parts of the domain (for the creation of the .csv file a GUI helping to create a correct file was created, but this is only optional).</p>
+  </li>
+  <li>
+    <p>Run the GUI for the field calculation, which takes the 4 files above as input and returns 2 .pvd files
+back, which contain the electrostatic potential and the electric field respectively.</p>
+  </li>
+  <li>
+    <p>Visualizing the electrostatic potential and electric field via your favorite software (<a href="https://www.paraview.org/">Paraview</a> might be a 
+good option)</p>
+  </li>
+</ol>
+
+<h2 id="mathematical-formulation-of-the-fem-problem-for-the-interested-and-math-affine-reader-only">Mathematical formulation of the FEM Problem (for the interested and math affine reader only)</h2>
+
+<p>The PDE to start with has the so called strong form,</p>
+
+<p>\begin{equation}
+ -\nabla(\sigma \nabla \Phi) = 0 
+ \end{equation}</p>
+
+<p>which has to be transformed in its <a href="https://en.wikipedia.org/wiki/Weak_formulation#Example_2:_Poisson's_equation">weak formulation</a>. This is done by multiplying with a sufficiently smooth testfunction $v$ (which additionally has to vanish on every point of the boundary where the solution to $\Phi$ is known) and integrating over the domain $\Omega$
+\begin{equation}
+\int_{\Omega} -\nabla(\sigma \nabla \Phi) v \mathrm{dx} = 0
+\end{equation}.
+In a second step we perform partial integration:
+$
+\begin{equation}
+\int_{\Omega} \sigma (\nabla \Phi) \cdot (\nabla v) \mathrm{dx} - \int_{\partial \Omega} v \sigma  (\nabla \Phi) \cdot \vec n \mathrm{ds}  = 0 
+\end{equation}
+$
+using the <a href="https://en.wikipedia.org/wiki/Divergence_theorem">Gauss theorem</a>. The contribution of the so-called Dirichlet boundary conditions (BC), where the value of $\Phi$ on the part of the boundary is known, vanishes because $v$ vanishes on these parts of the boundary (see, e.g., Section 2.1.1 <a href="https://link.springer.com/book/10.1007/978-3-319-52462-7">Langtangen16</a>). The remaining boundary parts are indexed by $i$ for so-called Robin-BC and $j$ for so-called Neumann-BC.
+Note that surface integrals coming from our Neumann boundary conditions also vanish 
+\begin{equation}
+\int_{\Omega} \sigma (\nabla \Phi) \cdot (\nabla v) \mathrm{dx} - \sum_i \int_{\partial \Omega_{i, \mathrm{Robin}}} v g_i (\Phi_i - \Phi) \mathrm{dS} - \sum_j \int_{\partial \Omega_{j, \mathrm{Neumann}}} v g_j \mathrm{dS} = 0
+\end{equation}
+because all $g_j = 0$.</p>
+
+<p>seeing this we can identify the so called <a href="https://en.wikipedia.org/wiki/Bilinear_form">bilinear</a> $a(\Phi,v)$ and <a href="https://en.wikipedia.org/wiki/Linear_form">linear</a> $L(v)$ term:</p>
+
+\[a(\Phi,v) = \int_{\Omega} \sigma (\nabla \Phi) \cdot (\nabla v) \mathrm{dx} + \sum_i \int_{\partial \Omega_{i, \mathrm{Robin}}} v g_i \Phi \mathrm{dS}\]
+
+\[L(v) = \sum_i \int_{\partial \Omega_{i, \mathrm{Robin}}} v g_i \Phi_i \mathrm{dS} +   \sum_j \int_{\partial \Omega_{j, \mathrm{Neumann}}} v g_j \mathrm{dS}\]
+
+<p>and the problem is now find $\Phi$ element of the <em>trial space</em> $V$ and $v$ element of the <em>test space</em> $\hat V$ such that 
+\begin{equation}
+a(\Phi,v) = L(v)
+\end{equation}
+Here $V$ and $\hat V$ are infinite-dimensional function spaces that guarantee that the above problem is well-defined (contains sufficiently smooth, <a href="https://en.wikipedia.org/wiki/Sobolev_space">well-behaved functions</a>).</p>
+
+<p>Because the Computer has a hard time working with infinite dimensional spaces we have to create a discrete problem. 
+For this we choose from our infinite dimensional function spaces $V$ and $\hat V$ only finitely many basis functions such that we only consider
+\begin{equation}a(\Phi,v) = L(v) \end{equation}
+for $\Phi \in V_h \subset V$ and $v \in \hat V_h \subset \hat V$, with $V_h$ and $\hat V_h$ finite dimensional.(chapter 2.1 <a href="https://link.springer.com/book/10.1007/978-3-319-52462-7">Langtangen16</a>).</p>
+
+<p>(A nice video illustrating how the FEM works in Detail for a simple 1 dimensional problem can be found <a href="https://www.youtube.com/watch?v=P4lBRuY7pC4">here</a>.)</p>
+
+<h1 id="example-parallel-plate-capacitor-with-two-differenct-conductive-media">Example: parallel plate capacitor with two differenct conductive media</h1>
+
+<h2 id="analytical-approximation-for-comparison">Analytical approximation for comparison</h2>
+
+<p>The parallel plate capacitor is sketched in Figure 1 (see below). 
+Assuming $\sigma = \mathrm{const}$ for convenience of calculating the analytical solution and
+assuming infinetely extending plates in y and x direction, $\Phi$ is just a function of z. and the PDE becomes <br />
+\begin{align} -\partial_z (\sigma \partial_z \Phi(z)) = 0 \end{align}</p>
+
+<p>with the general solution 
+\begin{equation} \Phi’(z) = \frac{c_1}{\sigma} \end{equation} 
+and therefore
+\begin{equation}\Phi(z) =\frac{c_1}{\sigma} z + c_2\end{equation} with $c_1, c_2 \in \mathbb R$. 
+This solution has to satisfy the BC’s
+\begin{equation}
+\sigma \cdot (-1) \partial_z  \Phi(z)  + g_u \Phi = g_u \Phi_u \end{equation}
+and 
+\begin{equation}\sigma  \cdot \partial_z  \Phi(z)  + g_o \Phi = g_o \Phi_o\end{equation}
+(mind the orientation of the outward pointing domain normal vector).
+Plugging in our result of the general form we obtain in more detail the equations
+\begin{equation}-\sigma c_1 + g_u (\frac{c_1 d_u}{\sigma} + c_2) = g_u \Phi_u\end{equation}
+and 
+\begin{equation}\sigma c_1 + g_o (\frac{c_1 d_o}{\sigma} + c_2) = g_o \Phi_o\end{equation}
+which gives the solution of the coefficients $c_1 $ and $c_2$
+\begin{equation}c_1 = \frac{(g_o g_u \Phi_o - g_o g_u \Phi_u) \sigma}{
+   d_o g_o g_u - d_u g_o g_u + g_o \sigma + g_u \sigma}, 
+  c_2 = -\frac{-d_u g_o g_u \Phi_o + d_o g_o g_u \Phi_u + g_o \Phi_o \sigma + 
+     g_u \Phi_u \sigma}{-d_o g_o g_u + d_u g_o g_u - g_o \sigma - 
+     g_u \sigma}\end{equation}
+of $\Phi(z)$ between the plates in approximation to infinitely extended plates.</p>
+
+<font color="gray"> Note that the Robin BC is equivalent to a Neumann BC when $g = 0$, and for $g \rightarrow \infty$ it becomes a Dirichlet BC. The second fact is used for the comparison of our example, where the lower plate is set to a Dirichlet-BC, with our analytic computation, using $g_u &gt;&gt; 1$.</font>
+
+<p><img src="/img/geometry_2D_sketch_clean.png" alt="title" /></p>
+<center>Fig. 1: Sketch of the setup of the parallel plate capacitor. Note that for the analytical calculation we assume translational invariance in x and y direction, so the problem is effectively one dimensional. Therefore it is sufficient to sketch only the x-z plane.</center>
+
+<h2 id="references-for-learning-how-to-write-your-own-program">references for learning how to write your own program</h2>
+
+<p>One of the things I love most about this project is that every part of the project is done by free to use open source software.</p>
+
+<p>As mentioned before, you do not necessarily have to use (<a href="https://gmsh.info/">GMSH</a> to create your geometry, there are other programs that do the same. Maybe you have obtained your geometry from measured data (e.g. MRI scan) and want to perform simulations with this geometry.)</p>
+
+<p>The actual PDE is solved by <a href="https://fenicsproject.org/">fenics</a>. I can’t recommend this software enough. It has an easy to use Python interface and is very robust and powerful. It has a large and very active community, so it’s easy to learn from others and improve. And what I like most is that the input to solve is very close to the actual mathematical formalism, so you understand more of what is going on. My recommodations for learning fenics are:</p>
+<ol>
+  <li><a href="https://link.springer.com/book/10.1007/978-3-319-52462-7"><u>fenics tutorial book</u></a> This helps a lot if one wants to
+dig a bit deeper into the math and learn from examples how to use fenics. Be aware that some things are a bit outdated and you have to google as always if your get unexpected error messages. The community is big so there already was someone having the same problem.</li>
+  <li><a href="https://fenics-handson.readthedocs.io/en/latest/poisson/doc.html#"><u>another fenics tutorial</u></a> This is another nice tutorial to learn how to use fencis.</li>
+  <li><a href="https://comphysblog.wordpress.com/"><u>the best tutorial for more realistic scenarios</u></a> This blog is amazing. Here I learned how create easy geometries using CAD software, mesh them and use this as input for the fenics calculations.</li>
+</ol>
+
+<p>For visualization, I recommend <a href="https://www.paraview.org/">Paraview</a>. However, if you have a very specific problem, you might think about using the output of the computation and writing your own visualization tools, e.g. with matplotlib.</p>
+
+:ET
